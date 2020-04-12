@@ -42,7 +42,6 @@ public class SocketClient {
         tryParseCache();
         if (webToken != null) {
             tryGetSocketToken();
-            tryGetSocket();
         }
     }
 
@@ -55,31 +54,58 @@ public class SocketClient {
     public void authorize(String authCode) throws IOException, ExecutionException, InterruptedException {
         OAuth2AccessToken accessToken = service.getAccessToken(authCode);
         webToken = accessToken.getAccessToken();
-        tryGetSocketToken();
-        tryGetSocket();
+
         writeCache();
+        tryGetSocketToken();
+        if (client != null && client.connected()) {
+            client.close();
+            tryGetSocket();
+            client.connect();
+        }
     }
 
     public void authorizeWithAPIToken(String token) throws IOException, ExecutionException, InterruptedException {
         webToken = token;
+
         tryGetSocketToken();
-        tryGetSocket();
         writeCache();
+        if (client != null && client.connected()) {
+            client.close();
+            tryGetSocket();
+            client.connect();
+        }
     }
 
     public void authorizeWithSocketToken(String token) throws IOException {
         socketToken = token;
-        tryGetSocket();
+        if (client != null && client.connected()) {
+            client.close();
+            tryGetSocket();
+            client.connect();
+        }
+    }
+
+    public boolean reconnectSocket() throws IOException {
+        if (socketToken != null) {
+            if (client != null && client.connected()) {
+                client.close();
+            }
+            tryGetSocket();
+            client.connect();
+            return true;
+        }
+        return false;
     }
 
     public boolean reauthorizeSocket() throws IOException, ExecutionException, InterruptedException {
-        if (client != null && client.connected()) {
-            client.close();
-        }
         if (webToken != null) {
             tryGetSocketToken();
         }
-        tryGetSocket();
+        if (client != null && client.connected()) {
+            client.close();
+            tryGetSocket();
+            client.connect();
+        }
         return socketToken != null;
     }
 
@@ -87,6 +113,17 @@ public class SocketClient {
         if (client != null && client.connected()) {
             client.close();
         }
+    }
+
+    public void connect() throws IOException, ExecutionException, InterruptedException {
+        if (client != null && client.connected()) {
+            client.close();
+        }
+        if (webToken != null && socketToken == null) {
+            tryGetSocketToken();
+        }
+        tryGetSocket();
+        client.connect();
     }
 
     public void onConnect(Runnable run) throws IOException {
@@ -170,7 +207,6 @@ public class SocketClient {
             client.on(Socket.EVENT_DISCONNECT, args -> { if (onDisconnect != null) { onDisconnect.accept(Arrays.toString(args)); } });
             client.on(Socket.EVENT_RECONNECT, args -> { if (onConnect != null) { onReconnect.run(); } });
             client.on("event", args -> { if (onEvent != null) { onEvent.accept(Arrays.toString(args)); } });
-            client.connect();
         } catch (URISyntaxException ex) {
             // Should never happen
             throw new IOException("Illegal WebSocket URL identified.", ex);
