@@ -48,6 +48,8 @@ public class SocketClient {
 
     public boolean isAuthorized() { return webToken != null; }
 
+    public boolean isConnected() { return client != null && client.connected(); }
+
     public String getAuthURL() { return service.getAuthorizationUrl(); }
 
     public void authorize(String authCode) throws IOException, ExecutionException, InterruptedException {
