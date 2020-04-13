@@ -1,4 +1,4 @@
-package ninja.egg82;
+package ninja.egg82.streamlabs;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 import ninja.egg82.core.StreamlabsApi20;
 import ninja.egg82.utils.FileUtil;
 
-public class SocketClient {
+public class StreamlabsSocketClient {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final OAuth20Service service;
@@ -30,7 +30,7 @@ public class SocketClient {
     private Runnable onReconnect = null;
     private Consumer<String> onEvent = null;
 
-    public SocketClient(String clientID, String clientSecret, String callbackURL, File cacheFile) throws IOException, ExecutionException, InterruptedException {
+    public StreamlabsSocketClient(String clientID, String clientSecret, String callbackURL, File cacheFile) throws IOException, ExecutionException, InterruptedException {
         this.cacheFile = FileUtil.getOrCreateFile(cacheFile);
         this.service = new ServiceBuilder(clientID)
                 .responseType("code")
