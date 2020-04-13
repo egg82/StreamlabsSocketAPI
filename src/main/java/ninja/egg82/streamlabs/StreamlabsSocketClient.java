@@ -204,9 +204,19 @@ public class StreamlabsSocketClient {
         try {
             client = IO.socket("https://sockets.streamlabs.com?token=" + socketToken);
             client.on(Socket.EVENT_CONNECT, args -> { if (onConnect != null) { onConnect.run(); } });
-            client.on(Socket.EVENT_DISCONNECT, args -> { if (onDisconnect != null) { onDisconnect.accept(Arrays.toString(args)); } });
+            client.on(Socket.EVENT_DISCONNECT, args -> {
+                if (onDisconnect != null) {
+                    String s = Arrays.toString(args);
+                    onDisconnect.accept(s.substring(1, s.length() - 1));
+                }
+            });
             client.on(Socket.EVENT_RECONNECT, args -> { if (onConnect != null) { onReconnect.run(); } });
-            client.on("event", args -> { if (onEvent != null) { onEvent.accept(Arrays.toString(args)); } });
+            client.on("event", args -> {
+                if (onEvent != null) {
+                    String s = Arrays.toString(args);
+                    onEvent.accept(s.substring(1, s.length() - 1));
+                }
+            });
         } catch (URISyntaxException ex) {
             // Should never happen
             throw new IOException("Illegal WebSocket URL identified.", ex);
